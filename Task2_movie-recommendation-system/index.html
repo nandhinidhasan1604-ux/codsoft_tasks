@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Recommender</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .poster::after {
+    content: "🎬";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 28px;
+    background: #22222e;
+    border-radius: 8px;
+  }
+
+  /* ── Base ── */
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0f0f13;
+    color: #eeeef5;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    padding: 20px 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .logo {
+    font-size: 20px;
+    font-weight: 600;
+    color: #a78bfa;
+  }
+  .ai-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(108,99,255,0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(108,99,255,0.3);
+  }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 72px 20px 48px;
+  }
+  .hero h1 {
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 36px;
+  }
+
+  /* ── Search box ── */
+  .search-box {
+    display: flex;
+    gap: 10px;
+    max-width: 460px;
+    margin: 0 auto 14px;
+  }
+  .search-box input {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: #1a1a22;
+    color: #eeeef5;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .search-box input:focus {
+    border-color: #6c63ff;
+  }
+  .search-box button {
+    padding: 14px 24px;
+    border-radius: 12px;
+    border: none;
+    background: #6c63ff;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .search-box button:hover { opacity: 0.85; }
+  .hint { font-size: 12px; color: #4b5563; }
+
+  /* ── Loading and error ── */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+    font-size: 14px;
+  }
+  .error {
+    display: none;
+    text-align: center;
+    padding: 16px;
+    color: #f87171;
+    font-size: 14px;
+  }
+
+  /* ── Results ── */
+  .results {
+    display: none;
+    max-width: 680px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+  }
+  .results-title {
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  /* ── Movie card ── */
+  .movie-card {
+    background: #1a1a22;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: border-color 0.2s;
+  }
+  .movie-card:hover { border-color: rgba(108,99,255,0.4); }
+
+  .rank {
+    font-size: 28px;
+    font-weight: 700;
+    color: rgba(108,99,255,0.25);
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .movie-card:first-child .rank { color: #fbbf24; }
+
+  .movie-info { flex: 1; min-width: 0; }
+  .movie-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Score bar ── */
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .bar-bg {
+    flex: 1;
+    height: 4px;
+    background: #22222e;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6c63ff, #a78bfa);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .bar-pct {
+    font-size: 11px;
+    color: #a78bfa;
+    font-weight: 600;
+    min-width: 32px;
+  }
+
+  .score-block { text-align: right; flex-shrink: 0; }
+  .score-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #a78bfa;
+    line-height: 1;
+  }
+  .score-lbl {
+    font-size: 10px;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 3px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 32px; }
+    header { padding: 16px 20px; }
+    .search-box { flex-direction: column; }
+    .movie-card { gap: 12px; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 1. Header -->
+  <header>
+    <div class="logo">🎬 CineMatch</div>
+    <span class="ai-badge">AI Powered</span>
+  </header>
+
+  <!-- 2. Hero section -->
+  <section class="hero">
+    <h1>Discover your next<br>favourite movie</h1>
+    <p>Enter a user ID and our AI finds your perfect match</p>
+
+    <div class="search-box">
+      <input type="number" id="userInput" placeholder="Enter user ID (1 to 943)" min="1" max="943">
+      <button onclick="getRecommendations()">Recommend →</button>
+    </div>
+    <p class="hint">Try: 1 · 50 · 200 · 543 · 800</p>
+  </section>
+
+  <!-- 3. Loading message (hidden by default) -->
+  <div class="loading" id="loading">Finding your movies...</div>
+
+  <!-- 4. Error message (hidden by default) -->
+  <div class="error" id="error"></div>
+
+  <!-- 5. Results section (hidden by default) -->
+  <section class="results" id="results">
+    <div class="results-title" id="resultsTitle"></div>
+    <div class="cards" id="cards"></div>
+  </section>
+<script>
+  document.getElementById('userInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') getRecommendations();
+});
+
+async function getRecommendations() {
+  const userId = document.getElementById('userInput').value.trim();
+
+  if (!userId || userId < 1 || userId > 943) {
+    showError('Please enter a number between 1 and 943');
+    return;
+  }
+
+  clearAll();
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    const response = await fetch(`/recommend?user_id=${userId}`);
+    const movies = await response.json();
+
+    document.getElementById('loading').style.display = 'none';
+
+    if (!movies.length) {
+      showError('No recommendations found for this user.');
+      return;
+    }
+
+    document.getElementById('resultsTitle').textContent =
+      `Top 5 recommendations for User ${userId}`;
+
+    // ── These two lines were missing ──
+    const maxScore = movies[0].score;
+    let html = '';
+
+    movies.forEach((movie, index) => {
+      const percent = Math.round((movie.score / maxScore) * 100);
+      html += `
+        <div class="movie-card">
+          <div class="rank">${index + 1}</div>
+
+          <img class="poster"
+               src="${movie.poster}"
+               alt="${movie.title}"
+               onerror="this.src='https://via.placeholder.com/60x90?text=?'">
+
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="bar-row">
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: ${percent}%"></div>
+              </div>
+              <span class="bar-pct">${percent}%</span>
+            </div>
+          </div>
+
+          <div class="score-block">
+            <div class="score-num">${movie.score}</div>
+            <div class="score-lbl">AI Score</div>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById('cards').innerHTML = html;
+    document.getElementById('results').style.display = 'block';
+
+  } catch (error) {
+    document.getElementById('loading').style.display = 'none';
+    showError('Something went wrong. Make sure the server is running.');
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function clearAll() {
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('cards').innerHTML = '';
+}
+</script>
+</body>
+</html>
