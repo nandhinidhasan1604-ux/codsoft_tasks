@@ -58,4 +58,4 @@ movie-recommendation-system/
     README.md
 
 ## Built by
-Divakar — AI Internship Project
+Nandhini — AI Internship Project
