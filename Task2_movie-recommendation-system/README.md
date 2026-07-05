@@ -3,10 +3,11 @@
 An AI-powered movie recommendation system built using 
 Collaborative Filtering and Cosine Similarity.
 
-## Screenshots
+## screenshot
 
-![Home Page](screenshots/home.png)
-![Recommendations](screenshots/results.png)
+![Home Page](screenshot/home.png)
+![Recommendations](screenshot/result1.png)
+![Recommendations](screenshot/result2.png)
 
 ## How it works
 
